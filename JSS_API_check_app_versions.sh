@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#https://github.com/cwmcbrewster/Jamf_API_Scripts/new/master
+#https://github.com/cwmcbrewster/Jamf_API_Scripts/blob/master/JSS_API_check_app_versions.sh
 
 #loosly based on work by https://github.com/bumbletech
 
