@@ -40,10 +40,10 @@ function check_for_updates () {
 while read xml_string; do
 
   #set the app info from the JSS
-  id=$(echo "$xml_string" | awk -F'<id>|</id>' '{print $2}')
-  app_bundle_id=$(echo "$xml_string" | awk -F'<bundle_id>|</bundle_id>' '{print $2}')
+  jamf_id=$(echo "$xml_string" | awk -F'<id>|</id>' '{print $2}')
+  jamf_bundle_id=$(echo "$xml_string" | awk -F'<bundle_id>|</bundle_id>' '{print $2}')
   jamf_version=$(echo "$xml_string" | awk -F'<version>|</version>' '{print $2}')
-  itunes_lastknown_url_raw=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath}/id/$id/subset/General | xpath '//mobile_device_application/general/itunes_store_url' 2>&1 | awk -F'<itunes_store_url>|</itunes_store_url>' '{print $2}' | grep .)
+  itunes_lastknown_url_raw=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath}/id/${jamf_id}/subset/General | xpath '//mobile_device_application/general/itunes_store_url' 2>&1 | awk -F'<itunes_store_url>|</itunes_store_url>' '{print $2}' | grep .)
   #XML can't deal with "&". replace the escape text.
   itunes_lastknown_url="${itunes_lastknown_url_raw/&amp;/&}"
   #itunesAdamId=$(echo $itunes_lastknown_url | sed -e 's/.*\/id\(.*\)?.*/\1/')
@@ -54,26 +54,26 @@ while read xml_string; do
 
   #json results from itunes lookup
   itunes_data=$(curl -s -H "Accept: application/JSON" -X GET "${itunes_api_url}")
-  bundleId=$(/usr/local/bin/jq -r ".results.\"${itunesAdamId}\".bundleId" <<< "${itunes_data}")
-  appleVersion=$(/usr/local/bin/jq -r ".results.\"${itunesAdamId}\".offers[].version.display" <<< "${itunes_data}" 2>/dev/null)
+  apple_bundle_id=$(/usr/local/bin/jq -r ".results.\"${itunesAdamId}\".bundleId" <<< "${itunes_data}")
+  apple_version=$(/usr/local/bin/jq -r ".results.\"${itunesAdamId}\".offers[].version.display" <<< "${itunes_data}" 2>/dev/null)
 
   #check if app's bundleID matches what's on the JSS. If it's blank, there's no record on the iTunes store.
-  if [[ -z $id ]]; then
+  if [[ -z ${jamf_id} ]]; then
     #do nothing. This is just a blank line in the data parsed from the jss
     :
-  elif [[ ${app_bundle_id} != ${bundleId} ]]; then
-    echo "Apple bundle ID:${app_bundle_id} | Jamf App ID:${id} | status:NO LONGER AVAILABLE"
-  elif [[ ${jamf_version} != ${appleVersion} ]]; then
-    echo "Apple bundle ID:${app_bundle_id} | Jamf App ID:${id} | status:VERSION MISMATCH"
-    read -p "Press Y to update ${app_bundle_id} from version ${jamf_version} to version ${appleVersion} [Y]: " continue </dev/tty
+  elif [[ ${jamf_bundle_id} != ${apple_bundle_id} ]]; then
+    echo "Apple bundle ID:${jamf_bundle_id} | Jamf App ID:${jamf_id} | status:NO LONGER AVAILABLE"
+  elif [[ ${jamf_version} != ${apple_version} ]]; then
+    echo "Apple bundle ID:${jamf_bundle_id} | Jamf App ID:${jamf_id} | status:VERSION MISMATCH"
+    read -p "Press Y to update ${jamf_bundle_id} from version ${jamf_version} to version ${apple_version} [Y]: " continue </dev/tty
     continue=${continue:-Y}
     if [[ "${continue}" =~ [Y|y] ]]; then
-      versionData="<mobile_device_application><general><version>${appleVersion}</version></general></mobile_device_application>"
-      curl -s -H "Content-Type: text/xml" -u ${apiUser}:${apiPass} "${JSSapiPath}/id/${id}/subset/General" -d "${versionData}" -X PUT
+      versionData="<mobile_device_application><general><version>${apple_version}</version></general></mobile_device_application>"
+      curl -s -H "Content-Type: text/xml" -u ${apiUser}:"${apiPass}" "${JSSapiPath}/id/${jamf_id}/subset/General" -d "${versionData}" -X PUT
       echo ""
     fi
-  elif [[ -n ${id} ]]; then
-    echo "Apple bundle ID:${app_bundle_id} | Jamf App ID:${id} | status:CURRENT"
+  elif [[ -n ${jamf_id} ]]; then
+    echo "Apple bundle ID:${jamf_bundle_id} | Jamf App ID:${jamf_id} | status:CURRENT"
   fi
 
 done <<< "${jamfAppsXml}"
