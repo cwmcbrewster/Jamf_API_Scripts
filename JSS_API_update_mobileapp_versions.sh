@@ -69,7 +69,7 @@ while read xml_string; do
     continue=${continue:-Y}
     if [[ "${continue}" =~ [Y|y] ]]; then
       versionData="<mobile_device_application><general><version>${appleVersion}</version></general></mobile_device_application>"
-      curl -s -H "Content-Type: text/xml" -u ${apiUser}:${apiPass} "${JSSapiPath}/id/${id}/subset/General" -d "${versionData}" -X PUT
+      curl -s -H "Content-Type: text/xml" -u ${apiUser}:"${apiPass}" "${JSSapiPath}/id/${id}/subset/General" -d "${versionData}" -X PUT
       echo ""
     fi
   elif [[ -n ${id} ]]; then
