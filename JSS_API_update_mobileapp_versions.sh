@@ -31,7 +31,7 @@ fi
 JSSapiPath="${JSSurl}/JSSResource/mobiledeviceapplications"
 
 #get list of bundleIDs for JSS apps
-jamfAppsXml=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath} | xpath '//mobile_device_applications/mobile_device_application' 2>&1 | awk -F'<mobile_device_application>|</mobile_device_application>' '{print $2}' | grep .)
+jamfAppsXml=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath} | xpath -e '//mobile_device_applications/mobile_device_application' 2>&1 | awk -F'<mobile_device_application>|</mobile_device_application>' '{print $2}' | grep .)
 
 function check_for_updates () {
 
@@ -43,7 +43,7 @@ while read xml_string; do
   jamf_id=$(echo "$xml_string" | awk -F'<id>|</id>' '{print $2}')
   jamf_bundle_id=$(echo "$xml_string" | awk -F'<bundle_id>|</bundle_id>' '{print $2}')
   jamf_version=$(echo "$xml_string" | awk -F'<version>|</version>' '{print $2}')
-  itunes_lastknown_url_raw=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath}/id/${jamf_id}/subset/General | xpath '//mobile_device_application/general/itunes_store_url' 2>&1 | awk -F'<itunes_store_url>|</itunes_store_url>' '{print $2}' | grep .)
+  itunes_lastknown_url_raw=$(curl -s -H "Accept: text/xml" -u ${apiUser}:"${apiPass}" ${JSSapiPath}/id/${jamf_id}/subset/General | xpath -e '//mobile_device_application/general/itunes_store_url' 2>&1 | awk -F'<itunes_store_url>|</itunes_store_url>' '{print $2}' | grep .)
   #XML can't deal with "&". replace the escape text.
   itunes_lastknown_url="${itunes_lastknown_url_raw/&amp;/&}"
   #itunesAdamId=$(echo $itunes_lastknown_url | sed -e 's/.*\/id\(.*\)?.*/\1/')
