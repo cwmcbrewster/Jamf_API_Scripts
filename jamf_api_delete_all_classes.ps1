@@ -6,8 +6,6 @@ $ErrorActionPreference = "Stop"
 
 $jamfCred = Get-Credential
 
-$url = "$jamfUrl/JSSResource/classes"
-
 function checkAuthToken {
   # https://stackoverflow.com/questions/24672760/powershells-invoke-restmethod-equivalent-of-curl-u-basic-authentication
   if (!$authTokenData) {
